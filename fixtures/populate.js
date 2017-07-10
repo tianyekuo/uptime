@@ -3,6 +3,7 @@ var mongoose   = require('../bootstrap');
 var Check      = require('../models/check');
 var CheckEvent = require('../models/checkEvent');
 var Ping       = require('../models/ping');
+var Envir       = require('../models/envir');
 
 var backInTime = 3 * 30 * 24 * 60 * 60 * 1000; // defaults to 3 months ago
 

@@ -40,16 +40,21 @@ exports.initWebApp = function(options) {
 
 	dashboard.on('populateFromDirtyCheck', function(checkDocument, dirtyCheck, type) {
 		if (type !== 'http' && type !== 'https') return;
-    if (!dirtyCheck.http_options) return;
-    var http_options = dirtyCheck.http_options;
-    try {
-      var options = yaml.safeLoad(dirtyCheck.http_options);
-      checkDocument.setPollerParam('http_options', options);
-    } catch (e) {
-      if (e instanceof YAMLException) {
-        throw new Error('Malformed YAML configuration ' + dirtyCheck.http_options);
-      } else throw e;
-    }
+        if (dirtyCheck.http_options){
+            var http_options = dirtyCheck.http_options;
+            try {
+              var options = yaml.safeLoad(dirtyCheck.http_options);
+              checkDocument.setPollerParam('http_options', options);
+            } catch (e) {
+              if (e instanceof YAMLException) {
+                throw new Error('Malformed YAML configuration ' + dirtyCheck.http_options);
+              } else throw e;
+            }
+        }
+        // var sign1 = dirtyCheck.http_sign || '';
+        checkDocument.setPollerParam('http_sign', dirtyCheck.http_sign || '');
+        // var params = ;
+        checkDocument.setPollerParam('http_params', dirtyCheck.http_params || '');
 	});
 
   dashboard.on('checkEdit', function(type, check, partial) {
@@ -66,6 +71,15 @@ exports.initWebApp = function(options) {
       }
       check.setPollerParam('http_options', options);
     }
+    check.http_params='';
+    var params=check.getPollerParam('http_params');
+    if(params){
+        check.setPollerParam('http_params', params);
+    }
+  var sign=check.getPollerParam('http_sign');
+  if(sign){
+      check.setPollerParam('http_sign', sign);
+  }
     partial.push(ejs.render(template, { locals: { check: check } }));
   });
 
@@ -83,6 +97,12 @@ exports.initMonitor = function(options) {
     for (var key in options) {
       poller.target[key] = options[key];
     }
+    //增加http post body支持
+    if(check.pollerParams.http_params){
+        poller.target['http_params'] = check.pollerParams.http_params
+    }
+    
+
     return;
   });
 

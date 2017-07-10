@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Uptime</title>
+    <link rel="stylesheet" href="<%= route %>/stylesheets/bootstrap.css">
+    <link rel="stylesheet" href="<%= route %>/stylesheets/style.css">
+    <link rel="shortcut icon" href="<%= route %>/favicon.ico">
+    <link rel="apple-touch-icon" href="<%= route %>/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="<%= route %>/apple-touch-icon-ipad.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="<%= route %>/apple-touch-icon-iphone4.png">
+    <%- renderCssTags(addedCss) %>
+    <script src="<%= route %>/javascripts/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io.connect(location.protocol + '//' + location.hostname);
+    </script>
+    <script src="<%= route %>/javascripts/moment.min.js"></script>
+    <!--[if lt IE 9]>
+    <script src="http://raw.github.com/aFarkas/html5shiv/master/src/html5shiv.js"></script>
+    <script src="http://raw.github.com/kriskowal/es5-shim/master/es5-shim.js"></script>
+    <script src="http://raw.github.com/kriskowal/es5-shim/master/es5-sham.js"></script>
+    <script type="text/javascript" src="path/to/flashcanvas.js"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="container">
+    <section>
+        <ul>
+            <li><code>equal</code>2校验json中某一个字段的值，比如meta-&gt;error的内容为0。统一转化成字符串进行对比</li>
+            <li><code>count</code>可以校验json串中数组的长度，比如数据的长度是5。或者长度大于3写作&gt;3,还支持,&lt;,&gt;=,&lt;=,=（默认值，可以不写）</li>
+            <li><code>length</code>返回数据的长度，目前不支持某个节点的数据长度</li>
+            <li><code>exist</code>节点是否存在，不校验具体的值</li>
+        </ul>
+        <form id="sample_check_form" class="form-horizontal">
+          <%- body %>
+        </form>
+        <pre>
+{
+    "meta": {
+        "errno": 0,
+        "msg": "success"
+    },
+    "result": {
+        "data": {
+            "activityUrl": "http:://www.baidu.com/?id=55",
+            "bannerPic": "https://www.baidu.com/img/bd_logo1.png",
+            "commodityList": [
+                {
+                    "activityType": "2",
+                    "bullId": "1161"
+                },
+                {
+                    "activityType": "1",
+                    "bullId": "1162"
+                }
+            ]
+        }
+    }
+}
+        </pre>
+    </section>
+</div>
+
+</body>
+</html>

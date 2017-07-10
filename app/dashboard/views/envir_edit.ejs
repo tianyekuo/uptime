@@ -1,0 +1,118 @@
+<div style="float: right;">
+  <span id="check_24h"></span>
+</div>
+<h1>Edit envir </h1>
+<div class="alert alert-success" style="display: none;">保存成功</div>
+<form id="envir_form" method="post" class="form-horizontal">
+  <div class="row">
+
+    <div class="span6">
+      <fieldset>
+        <div class="control-group">
+          <label class="control-label">Envir name</label>
+          <div class="controls controls-row">
+            <input type="text" required id="envirname" value="<%= envirs.name || '' %>" class="span5"/>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+    <div style="text-align:right">
+      <!-- <a class="btn btn-primary add" href="javascripts:void(0)">Add row</a> -->
+      <button type="submit" id="add" class="btn btn-primary">Add row</button>
+    </div>
+  </div>
+  <table class="table chart" id="envirs">
+    <thead>
+      <tr>
+        <th style="width:40%">Key</th>
+        <th style="width:40%">Value</th>
+        <th style="width:20%"></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div style="text-align:right">
+    <button type="submit" id="save" class="btn btn-primary">Save</button>
+  </div>
+</form>
+<script src="<%= route %>/javascripts/jquery.tablesorter.min.js"></script>
+<script src="<%= route %>/javascripts/uptimeBar.js"></script>
+<script src="<%= route %>/javascripts/ejs.min.js"></script>
+<script id="envir_template" type="text/template">
+<tr>
+  <td>
+      <input type="text" required value="{{= _key }}" class="span4 key"/>
+  </td>
+  <td>
+      <input type="text" required value="{{= _value }}" class="span4 value"/>
+  </td>
+  <td>
+    <button type="button" class="btn btn-danger del">Del</button>
+  </td>
+</tr>
+</script>
+<script>
+jQuery(document).ready(function($) {
+  $('.navbar-inner li').eq(3).addClass('active');
+  
+  var envir_template = document.getElementById('envir_template').innerHTML;
+  var ejs = require('ejs');
+  ejs.open = '{{';
+  ejs.close = '}}';
+  var updateEnvirs = function(envirs) {
+    var updateEnvirsSection = function(envirs) {
+      var lines = [];
+      $.each(envirs, function(key, value, a) {
+        lines.push(ejs.render(envir_template, { _key: key, _value: value}));
+      });
+      
+      $('#envirs tbody').html(lines.join(''));
+      $('#envirs').trigger('update');
+    }
+    if (envirs) {
+      updateEnvirsSection(envirs);
+    }
+  }
+  updateEnvirs(<%- (envirs && envirs.params) ? JSON.stringify(envirs.params) : null %>);
+  
+  var id = "<%- envirs.id%>";
+  var buttonid = "";
+  
+  $("#envir_form").submit(function(e){
+    e.preventDefault();
+    if(buttonid=="add"){
+      $('#envirs tbody').append(ejs.render(envir_template, { _key: "", _value: ""}));
+      $('#envirs').trigger('update');
+    }else if(buttonid=="save"){
+      var data = {
+        params: {},
+        name: $("#envirname").val()
+      };
+      $('#envirs tbody tr').each(function(){
+        data.params[$(this).find(".key").val()] = $(this).find(".value").val();
+        
+      });
+
+      $.post('/api/envir'+ (id ? ("/"+id):""), data, function(data, textStatus, xhr) {
+        window.sessionStorage.envir = "";
+        $('h1 + div.alert').slideDown(400);
+        window.setTimeout(function() {
+          $('h1 + div.alert').slideUp(400, function() {
+            
+          });
+        }, 5000);
+      });
+      id || (window.location.href = "<%- route %>"+"/envirs")
+    }
+  });
+
+  $("[type=submit]").click(function(){
+    buttonid = this.id
+  });
+
+  $("#envirs").on("click", '.del', function(){
+    $(this).parent().parent().remove();
+  });
+});
+</script>

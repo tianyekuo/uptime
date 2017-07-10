@@ -69,6 +69,8 @@ app.get('/checks/count', function(req, res, next) {
 require('./routes/check')(app);
 require('./routes/tag')(app);
 require('./routes/ping')(app);
+require('./routes/test')(app);
+require('./routes/envir')(app);
 
 // route list
 app.get('/', function(req, res) {

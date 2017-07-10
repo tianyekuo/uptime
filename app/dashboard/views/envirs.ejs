@@ -1,0 +1,84 @@
+<h1>Envirs <small class="pull-right">last 24 hours</small></h1>
+<div style="text-align:right">
+  <a class="btn btn-primary" href="<%= route %>/envir">Create envir</a>
+</div>
+<div class="row">
+  <div class="title" style="text-align: center; color: #9c9c9c;">TIP：使用方法&lt;%=envirName%&gt;</div>
+</div>
+<table class="table chart" id="envirs">
+  <thead>
+    <tr>
+      <th style="width:80%">Name</th>
+      <th style="width:10%">&nbsp;</th>
+      <!-- <th style="width:10%">Option</th> -->
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<script src="<%= route %>/javascripts/uptimeBar.js"></script>
+<script src="<%= route %>/javascripts/ejs.min.js"></script>
+<script id="envir_template" type="text/template">
+<tr id="envir_{{=envir._id}}">
+  <td data-sort="{{= envir.name }}"><a href="{{= route + '/envir/' + encodeURIComponent(envir._id) }}">{{= envir.name }}</a></td>
+  <td><span style="display: none;">defalut</span></td>
+  <!-- <td ><a class="btn btn-mini" data-i="{{= index}}">default</a></td> -->
+</tr>
+</script>
+<script>
+jQuery(document).ready(function($) {
+  $('.navbar-inner li').eq(3).addClass('active');
+  
+  var envir_template = document.getElementById('envir_template').innerHTML;
+  var ejs = require('ejs');
+  ejs.open = '{{';
+  ejs.close = '}}';
+  var updateEnvirs = function(envirs) {
+    var updateEnvirsSection = function(envirs) {
+      var lines = [];
+      var lastUpdated;
+      $.each(envirs, function(i, envir) {
+        lines.push(ejs.render(envir_template, { index: i, envir: envir, route: '<%= route %>' }));
+        lastUpdated = envir.lastUpdated;
+      });
+      $('#envirs tbody').html(lines.join(''));
+      $('#envirs').trigger('update');
+      getDefault();
+    }
+    if (envirs) {
+      updateEnvirsSection(envirs);
+    } else {
+      $.getJSON('/api/envirs', updateEnvirsSection);
+    }
+  }
+  var env = <%- JSON.stringify(envirs) %>;
+  updateEnvirs(env);
+  window.setInterval(updateEnvirs, 5 * 60 * 1000); // refresh every 5 minutes to update the qos scores
+  
+  $(".btn-mini").on("click", function(){
+    setDefault(env[$(this).data("i")]);
+  });
+
+  
+});
+
+function getDefault(){
+  if(!window.sessionStorage.envir || window.sessionStorage.envir=="null")
+    return;
+  var env = JSON.parse(window.sessionStorage.envir);
+  
+  $("tbody span").hide();
+  $("#envir_"+env["_id"]).find("span").show();
+}
+function setDefault(obj){
+  // console.log(obj);
+  window.sessionStorage.envir = JSON.stringify(obj);
+  getDefault();
+
+  var reg = new RegExp("(^|&)back=([^&]*)(&|$)", "i");
+  var r = window.location.search.substr(1).match(reg);
+  if (r != null)
+    window.location.href = decodeURIComponent(r[2]);
+    
+}
+
+</script>

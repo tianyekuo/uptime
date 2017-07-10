@@ -20,6 +20,7 @@ var Check = new Schema({
   interval    : { type: Number, default: 60000 }, // interval between two pings
   maxTime     : { type: Number, default: 1500 },  // time under which a ping is considered responsive
   alertTreshold : { type: Number, default: 1 },   // nb of errors from which to trigger a new CheckEvent
+  envir       : String,
   errorCount  : { type: Number, default: 0 },     // count number of errors
   tags        : [String],
   lastChanged : Date,
@@ -319,6 +320,7 @@ Check.methods.populateFromDirtyCheck = function(dirtyCheck, pollerCollection) {
   this.maxTime = dirtyCheck.maxTime || this.maxTime;
   this.isPaused = dirtyCheck.isPaused || this.isPaused;
   this.alertTreshold = dirtyCheck.alertTreshold || this.alertTreshold;
+  this.envir = dirtyCheck.envir || this.envir;
   this.interval = dirtyCheck.interval * 1000 || this.interval;
 
   if (typeof(dirtyCheck.name) !== 'undefined' && dirtyCheck.name.length) {

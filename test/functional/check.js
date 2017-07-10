@@ -36,8 +36,8 @@ describe('GET /checks', function() {
   it('should fetch all elements', function(done) {
 
     var options = {
-      hostname: '127.0.0.1',
-      port: 3000,
+      hostname: '192.168.1.98',
+      port: 8082,
       path: '/api/checks',
       headers: {
         'Accept': 'application/json'
@@ -54,7 +54,9 @@ describe('GET /checks', function() {
       res.on('end', function(){
         content = JSON.parse(body);
         assert.equal(content.length, 2);
+        console.log(content);
         done();
+
       });
     });
 

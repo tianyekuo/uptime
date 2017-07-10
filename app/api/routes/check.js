@@ -29,6 +29,8 @@ module.exports = function(app) {
 
   app.get('/checks/needingPoll', function(req, res, next) {
     Check
+    // .find({})
+    // .sort({ isUp: 1, lastChanged: -1 })
     .needingPoll()
     .select({qos: 0})
     .exec(function(err, checks) {

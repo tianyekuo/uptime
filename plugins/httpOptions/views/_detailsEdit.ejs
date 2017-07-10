@@ -1,5 +1,17 @@
 <script src="/httpOptions/javascripts/jquery.autoresize.js"></script>
 <fieldset>
+    <div class="control-group">
+        <label class="control-label">Sign before request:</label>
+        <div class="controls controls-row">
+            <select name="check[http_sign]" class="span2">
+                <option value=""></option>
+                <option value="bdata" <% if ("bdata" === check.getPollerParam('http_sign')) { %> selected="true" <% } %> >bdata</option>
+            </select>
+        </div>
+
+    </div>
+</fieldset>
+<fieldset>
   <div class="control-group">
     <label class="control-label">HTTP Options</label>
     <div class="controls">
@@ -10,10 +22,21 @@
         <% } else { %>
         <a target="_blank" href="http://nodejs.org/api/https.html#https_https_request_options_callback">Node.js HTTPS
         <% } %>
-        documentation</a> for a list of available options</span>
+        documentation</a> for a list of available options. See also
+            <a target="_blank" href="/dashboard/options/sample">Sample</a>
+      </span>
     </div>
   </div>
 </fieldset>
+<fieldset>
+    <div class="control-group">
+        <label class="control-label">Request parameters</label>
+        <div class="controls">
+            <textarea name="check[http_params]" class="span8" rows="3" placeholder="Http post params, e.g method:"/><%= check.getPollerParam('http_params') || '' %></textarea>
+        </div>
+    </div>
+</fieldset>
+
 <script type="text/javascript">
 jQuery(function($) {
   $('#check_form textarea[name="check[http_options]"]').autoResize();

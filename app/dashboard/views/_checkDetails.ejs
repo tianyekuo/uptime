@@ -80,17 +80,39 @@
     </div>
 
 
-    <fieldset>
-      <div class="control-group">
-        <label class="control-label">Alert threshold</label>
-        <div class="controls">
-          <div class="input-append">
-            <input type="text" name="check[alertTreshold]" value="<%= check.alertTreshold %>" class="span1" />
-            <span class="add-on">failed pings</span>
+    <div class="row">
+
+      <div class="span6">
+        <fieldset>
+          <div class="control-group">
+            <label class="control-label">Alert threshold</label>
+            <div class="controls">
+              <div class="input-append">
+                <input type="text" name="check[alertTreshold]" value="<%= check.alertTreshold %>" class="span1" />
+                <span class="add-on">failed pings</span>
+              </div>
+            </div>
           </div>
-        </div>
+        </fieldset>
       </div>
-    </fieldset>
+
+      <div class="span6">
+        <fieldset>
+          <div class="control-group">
+            <label class="control-label">Envir</label>
+            <div class="controls controls-row">
+              <select name="check[envir]" value="<%= check.envir || '' %>" class="span2">
+                <option value=" ">none</option>
+                <% envirs.forEach(function(envir) { %>
+                <option value="<%= envir["_id"] %>" <%= (envir["_id"] == check.envir) ? "selected='true'": ""%> ><%= envir.name %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+
+    </div>
 
     <span id="pollerDetails">
     <%- pollerDetails %>
@@ -111,22 +133,39 @@
         </div>
       </div>
       <% } %>
+      <div class="alert alert-error errorMsg" style="display: none;">&nbsp;</div>
       <div class="form-actions">
         <% if (check.isNew) { %>
         <button type="submit" class="btn btn-primary">Save</button>
         <button type="submit" name="saveandadd" value="true" class="btn btn-primary">Save and add</button>
-        <a class="btn" href="<%= route %>/checks">Cancel</a>
+        <button name="test" type="button" class="btn btn-success ">测试</button>
+          <a class="btn" href="<%= route %>/checks">Cancel</a>
         <% } else { %>
         <button type="submit" class="btn btn-primary">Save changes</button>
         <a class="btn" href="<%= route %>/checks/<%= check._id %>">Cancel</a>
+        <button name="test" type="button" class="btn btn-success">测试</button>
         <button type="submit" class="btn btn-danger pull-right" name="delete">Delete</button>
         <% } %>
       </div>
     </fieldset>
   </form>
+    <div class="control-group">
+        <div class="controls">
+            <textarea name="check[test]" rows="10" class="span12" /></textarea>
+        </div>
+    </div>
+    <div class="control-group error">
+      <div class="controls">
+        <input type="text" name="check[testresult]" class="span12" readonly/></textarea>
+      </div>
+    </div>
 </div>
 <script src="<%= route %>/javascripts/jquery.tagsinput.min.js"></script>
+<script src="<%= route %>/javascripts/ejs.min.js"></script>
 <script>
+var ejs = require('ejs');
+  // ejs.open = '{{';
+  // ejs.close = '}}';
 var intervalFieldSelector = 'form input[name="check\\[interval\\]"]';
 function updatePollingIntervalTooltip() {
   var value = $(intervalFieldSelector).val();
@@ -161,6 +200,105 @@ $(document).ready(function() {
       .fail(function() { pollerDetails.html(''); })
       .done(function(html) { pollerDetails.html(html); });
   });
+    $(document).on('click','button[name="add"]',function(){
+
+        var verifyDetails = $('#verifyDetails');
+        var verifyType = $('select[name="check\[verify\]"] option:selected').get(0).text;
+//        var obj = {"type":verifyType,"param1":"","param2":""};
+//        console.log(obj);
+         $.get('<%= route %>/verifyPartial/' + verifyType)
+              .fail(function() { })
+              .done(function(html) { verifyDetails.append(html); });
+//        verifyDetails.append('<button name="test" type="button" class="btn btn-success">Add</button>');
+    });
+  $(document).on('click','a[name="deleteVerify"]',function(){
+    var item = $(this);
+    var parent = $("#verify_" + item.attr("value"));
+    item.parent().remove();
+  })
+
+  var obj = {
+    id: "51f9d7f731d6559b7d00014d",
+    url: "app.knight.com"
+  };
+  function replace(template, obj){  
+    var t, key, reg;  
+      for(key in obj){  
+        reg = new RegExp('{{' + key + '}}', 'ig');  
+        t = (t || template).replace(reg, obj[key]);  
+      }
+    return t;  
+  }
+
+  var envirs = <%- envirs ? JSON.stringify(envirs) : null %>;
+  var params = null;
+  $(document).on('click','button[name="test"]',function(){
+      var env = $("select[name='check[envir]']").val();
+      params = {};
+      if(envirs && envirs.length > 0){
+        envirs.forEach((envir)=>{
+          (envir["_id"] == env) && (params = envir.params)
+        });
+      }
+      
+      var http_data=new Object();
+      try{
+        http_data.http_options = ejs.render($('textarea[name="check[http_options]"').get(0).value, params || {});
+        http_data.url = ejs.render(replace($('input[name="check[url]"').get(0).value, obj), params || {});
+        http_data.http_params = ejs.render($('textarea[name="check[http_params]"').get(0).value, params || {});
+      }catch(e){
+        e = e+"";
+        // $('.errorMsg').html().slideDown(400);
+        // window.setTimeout(function() {
+        //   $('.errorMsg').slideUp(400);
+        // }, 5000);
+
+           $('input[name="check[testresult]"]').get(0).value="Environment "+e.substring(e.lastIndexOf("| ")+2);
+        return;
+      }
+
+      http_data.type =$('select[name="check[type]"').get(0).value;
+
+      http_data.http_sign = $('select[name="check[http_sign]"').get(0).value;
+      http_data.pollerParams =  new Object()
+      http_data.pollerParams.verify = Array();
+//      http_data.pollerParams.verify =Array({"param2" : "", "param1" : "result.data[0].pic", "type" : "exist"}, {"param2" : "奥莱精选", "param1" : "result.data[0].name", "type" : "equal"}, {"param2" : ">20", "param1" : "result.data[0].contentList", "type" : "count"}, {"param2" : "1", "param1" : "result.data", "type" : "count"}, {"param2" : "", "param1" : "result.data", "type" : "exist"}, {"param2" : "1", "param1" : "meta.errno", "type" : "equal"})
+      var verifyType = $('[name="check[verify[type]"').map(function(){return $(this).val()}).get();
+      var verifyPath = $('[name="check[verify[param1]"').map(function(){return $(this).val()}).get();
+      var verifyExpect = $('[name="check[verify[param2]"').map(function(){return $(this).val()}).get();
+      verifyType.forEach(function(item, index){
+//        var i = JSON.stringify({"type":item,"param1":verifyPath[index],"param2":verifyExpect[index]});
+        var i = {"type":item,"param1":verifyPath[index],"param2":verifyExpect[index]};
+        http_data.pollerParams.verify.push(i);
+      });
+
+
+      $.ajax({
+          type: "POST",
+          url: "/api/test" ,
+          data:http_data,
+          dataType:"json",
+          success: function (data) {
+            $('textarea[name="check[test]"]').get(0).value=data.body;
+             if ('err' in data){
+               $('input[name="check[testresult]"]').get(0).value=data.err;
+             }
+            else{
+               $('input[name="check[testresult]"]').get(0).value='';
+             }
+//            verify data after call
+          },
+          error: function (xhr, status, errorThrown) {
+              alert("Sorry, there was a problem!");
+              console.log("Error: " + errorThrown);
+              console.log("Status: " + status);
+              console.dir(xhr);
+          },
+          complete: function (xhr, status) {
+              console.log("The request is complete!");
+          }
+      });
+  })
 
   var tagField = $('#check_form textarea[name="check[tags]"]');
   var tags = tagField.val().split(', ');
@@ -169,4 +307,13 @@ $(document).ready(function() {
     window.location = '<%= route %>/tags/' + $(this).text();
   });
 });
+
+var envir,
+    params;
+function getDefault(){
+  
+  
+  
+}
+getDefault();
 </script>

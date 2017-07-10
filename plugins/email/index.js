@@ -54,11 +54,34 @@ var nodemailer = require('nodemailer');
 var moment     = require('moment');
 var CheckEvent = require('../../models/checkEvent');
 var ejs        = require('ejs');
+var template = fs.readFileSync(__dirname + '/views/_detailsEdit.ejs', 'utf8');
 
 exports.initWebApp = function(options) {
   var config = options.config.email;
-  var mailer = nodemailer.createTransport(config.method, config.transport);
+  var smtpConfig = {
+    host: config.transport.host,
+    port: config.transport.port,
+    secure: config.transport.secure, // use SSL
+    auth: {
+      user: config.transport.auth.user,
+      pass: config.transport.auth.pass
+    }
+  };
+  console.log(smtpConfig);
+
+  var mailer = nodemailer.createTransport(config.method, smtpConfig);
   var templateDir = __dirname + '/views/';
+
+  var dashboard = options.dashboard;
+  dashboard.on('checkEdit', function(type, check, partial) {
+    partial.push(ejs.render(template, { locals: { check: check } }));
+
+  });
+
+  dashboard.on('populateFromDirtyCheck', function(checkDocument, dirtyCheck, type) {
+    checkDocument.setPollerParam('email', dirtyCheck.email || '');
+  });
+
   CheckEvent.on('afterInsert', function(checkEvent) {
     if (!config.event[checkEvent.message]) return;
     checkEvent.findCheck(function(err, check) {
@@ -78,6 +101,14 @@ exports.initWebApp = function(options) {
         subject: lines.shift(),
         text:    lines.join('\n')
       };
+
+      var params = check.pollerParams;
+      if(params){
+        var email = params.email;
+        if(email && email !=''){
+          mailOptions.to = email;
+        }
+      }
       mailer.sendMail(mailOptions, function(err2, response) {
         if (err2) return console.error('Email plugin error: %s', err2);
         console.log('Notified event by email: Check ' + check.name + ' ' + checkEvent.message);
